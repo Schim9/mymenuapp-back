@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:8081")
 @RestController
-@RequestMapping("/api/ingredients")
+@RequestMapping("/ingredients")
 public class IngredientController {
     @Autowired
     IngredientRepository ingredientRepository;
@@ -76,6 +76,7 @@ public class IngredientController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @DeleteMapping("")
     public ResponseEntity<Long> deleteIngredient(@RequestBody Ingredient ingredientParam) {
         try {
