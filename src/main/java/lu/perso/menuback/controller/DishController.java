@@ -7,6 +7,7 @@ import lu.perso.menuback.models.Ingredient;
 import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.services.DatabaseServices;
+import lu.perso.menuback.services.DishServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/dishes")
 public class DishController {
     @Autowired
+    DishServices dishServices;
+    @Autowired
     IngredientRepository ingredientRepository;
     @Autowired
     DishRepository dishRepository;
@@ -30,22 +33,8 @@ public class DishController {
 
     @GetMapping("")
     public ResponseEntity<List<Dish>> findAllDishes() {
-        List<DishEntity> dishList = dishRepository.findAll();
-        List<Dish> collect = dishList.stream()
-                .map(element -> {
-                    List<Ingredient> ingredients = element.recipe().stream()
-                            .map(ingredientEntity -> new Ingredient(
-                                            ingredientEntity.id(),
-                                            ingredientEntity.name(),
-                                            ingredientEntity.sectionId(),
-                                            ingredientEntity.unit()
-                                    )
-                            )
-                            .collect(Collectors.toList());
-                    return new Dish(element.id(), element.name(), ingredients);
-                })
-                .collect(Collectors.toList());
-        return new ResponseEntity<>(collect, HttpStatus.OK);
+        List<Dish> allDishes = dishServices.getAllDishes();
+        return new ResponseEntity<>(allDishes, HttpStatus.OK);
     }
 
     @PostMapping("")
@@ -106,7 +95,22 @@ public class DishController {
         }
     }
 
-    // TODO DELETE (check in menus the dish is not planed
+    @DeleteMapping("")
+    public ResponseEntity<Long> deleteDish(@RequestBody Dish dishParam) {
+        try {
+            // Check if dish does exist
+            if (dishRepository.findById(dishParam.id()).isEmpty()) {
+                return new ResponseEntity<>(-1L, HttpStatus.BAD_REQUEST);
+            }
+            // TODO ERK: Check dish does not exist in any menu
+
+
+            dishRepository.deleteById(dishParam.id());
+            return new ResponseEntity<>(dishParam.id(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
 
 
