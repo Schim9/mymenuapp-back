@@ -67,9 +67,6 @@ public class IngredientServices {
 
     public void deleteIngredient(Ingredient ingredientToDelete) throws IllegalStateException {
         // Check if ingredient does exist
-        if (ingredientRepository.findById(ingredientToDelete.id()).isEmpty()) {
-            throw new IllegalStateException("This ingredient does not exist");
-        }
         IngredientEntity storedIngredient = ingredientRepository.findById(ingredientToDelete.id())
                 .orElseThrow(() -> new IllegalStateException("This ingredient does not exist"));
         // Check if ingredient is not used in any dish
