@@ -2,6 +2,7 @@ package lu.perso.menuback.services;
 
 import lu.perso.menuback.constant.MenuEnum;
 import lu.perso.menuback.data.DishEntity;
+import lu.perso.menuback.data.MenuItemEntity;
 import lu.perso.menuback.mappers.DishMapper;
 import lu.perso.menuback.models.Dish;
 import lu.perso.menuback.repository.DishRepository;
@@ -80,10 +81,10 @@ public class DishServices {
         DishEntity storedDish = dishRepository.findById(dishToDelete.id())
                 .orElseThrow(() -> new IllegalStateException("This dish does not exist"));
         // Check if dish is not used in any menu
-        if (menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(Stream.of(storedDish).toList()).isEmpty()) {
-            dishRepository.deleteById(storedDish.id());
-        } else {
+        if (!menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(Stream.of((MenuItemEntity) storedDish).toList()).isEmpty()) {
             throw new IllegalStateException("This dish is planned and can not be deleted");
+        } else {
+            dishRepository.deleteById(storedDish.id());
         }
     }
 }

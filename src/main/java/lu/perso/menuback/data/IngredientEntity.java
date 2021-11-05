@@ -5,10 +5,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "ingredients")
-public record IngredientEntity(
+public record IngredientEntity (
         @Id
         Long id,
         String name,
         Long sectionId,
         UNIT unit
-) { }
+)  implements MenuItemEntity { }

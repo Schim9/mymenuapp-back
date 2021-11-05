@@ -2,10 +2,12 @@ package lu.perso.menuback.services;
 
 import lu.perso.menuback.constant.MenuEnum;
 import lu.perso.menuback.data.IngredientEntity;
+import lu.perso.menuback.data.MenuItemEntity;
 import lu.perso.menuback.mappers.IngredientMapper;
 import lu.perso.menuback.models.Ingredient;
 import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
+import lu.perso.menuback.repository.MenuRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,6 +24,8 @@ public class IngredientServices {
     @Autowired
     DishRepository dishRepository;
     @Autowired
+    MenuRepository menuRepository;
+    @Autowired
     DatabaseServices databaseServices;
     @Autowired
     IngredientMapper ingredientMapper;
@@ -33,7 +37,7 @@ public class IngredientServices {
                 .collect(Collectors.toList());
     }
 
-    public Ingredient createIngredient(Ingredient ingredientModel) throws IllegalStateException{
+    public Ingredient createIngredient(Ingredient ingredientModel) throws IllegalStateException {
 
         // Check if ingredient already exists
         if (!Objects.isNull(ingredientRepository.findByName(ingredientModel.name()))) {
@@ -49,10 +53,10 @@ public class IngredientServices {
         return ingredientMapper.toView(savedObject);
     }
 
-    public Ingredient updateIngredient(Ingredient updatedIngredient) throws IllegalStateException {
+    public void updateIngredient(Ingredient updatedIngredient) throws IllegalStateException {
         // Check if ingredient does exist
         if (ingredientRepository.findById(updatedIngredient.id()).isEmpty()) {
-            throw new IllegalStateException("Thie ingredient does not exist");
+            throw new IllegalStateException("This ingredient does not exist");
         }
 
         IngredientEntity newIngredient = new IngredientEntity(
@@ -62,7 +66,6 @@ public class IngredientServices {
                 updatedIngredient.unit()
         );
         ingredientRepository.save(newIngredient);
-        return updatedIngredient;
     }
 
     public void deleteIngredient(Ingredient ingredientToDelete) throws IllegalStateException {
@@ -70,10 +73,12 @@ public class IngredientServices {
         IngredientEntity storedIngredient = ingredientRepository.findById(ingredientToDelete.id())
                 .orElseThrow(() -> new IllegalStateException("This ingredient does not exist"));
         // Check if ingredient is not used in any dish
-        if (dishRepository.findDishEntitiesByRecipeContaining(Stream.of(storedIngredient).toList()).isEmpty()) {
-            ingredientRepository.deleteById(ingredientToDelete.id());
-        } else {
+        if (!dishRepository.findDishEntitiesByRecipeContaining(Stream.of(storedIngredient).toList()).isEmpty()) {
             throw new IllegalStateException("This ingredient is used and can not be deleted");
+        } else if (!menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(Stream.of((MenuItemEntity) storedIngredient).toList()).isEmpty()) {
+            throw new IllegalStateException("This ingredient is planned and can not be deleted");
+        } else {
+            ingredientRepository.deleteById(ingredientToDelete.id());
         }
     }
 }

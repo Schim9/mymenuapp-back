@@ -6,4 +6,4 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 
 @Document(collection = "dishes")
-public record DishEntity(@Id Long id, String name, List<IngredientEntity> recipe) { }
+public record DishEntity(@Id Long id, String name, List<IngredientEntity> recipe)  implements MenuItemEntity { }

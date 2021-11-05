@@ -2,7 +2,6 @@ package lu.perso.menuback.repository;
 
 import lu.perso.menuback.data.DishEntity;
 import lu.perso.menuback.data.IngredientEntity;
-import lu.perso.menuback.models.Ingredient;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
