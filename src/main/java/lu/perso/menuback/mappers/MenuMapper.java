@@ -21,7 +21,7 @@ public class MenuMapper {
     @Autowired
     IngredientMapper ingredientMapper;
 
-    Menu toView(MenuEntity entity) {
+    public Menu toView(MenuEntity entity) {
         List<MenuItem> lunchMeals = entity.lunchMeals()
                 .stream()
                 .map(meal -> switch (meal) {
@@ -46,7 +46,7 @@ public class MenuMapper {
     }
 
     // NotImplemented yet
-    MenuEntity toEntity(Menu view) {
+    public MenuEntity toEntity(Menu view) {
         List<MenuItemEntity> lunchMeals = view.lunchMeals()
                 .stream()
                 .map(meal -> switch (meal) {

@@ -2,9 +2,11 @@ package lu.perso.menuback.services;
 
 import lu.perso.menuback.constant.MenuEnum;
 import lu.perso.menuback.data.DishEntity;
+import lu.perso.menuback.data.IngredientEntity;
 import lu.perso.menuback.data.MenuItemEntity;
 import lu.perso.menuback.mappers.DishMapper;
 import lu.perso.menuback.models.Dish;
+import lu.perso.menuback.models.Ingredient;
 import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.repository.MenuRepository;
@@ -45,11 +47,9 @@ public class DishServices {
         // Get Ingredients from database
         // In case one of them does not exist, an error is raised
         var recipe = newDish.recipe()
-                .stream()
-                .map(
-                    ingredient -> ingredientRepository.findById(ingredient.id())
-                        .orElseThrow(() -> new IllegalStateException("This ingredient does not exist [" + ingredient.name() + "]"))
-                ).collect(Collectors.toList());
+            .stream()
+            .map(this::toIngredientEntiy)
+            .collect(Collectors.toList());
 
         DishEntity createdDish = new DishEntity(
                 databaseServices.generateSequence(MenuEnum.SEQUENCE_TYPE.DISHES),
@@ -65,13 +65,11 @@ public class DishServices {
         if (dishRepository.findById(updatedDish.id()).isEmpty()) {
             throw new IllegalStateException("This dish does not exist");
         }
-        // Get Ingredients from database
         // In case one of them does not exist, an error is raised
-        var recipe = updatedDish.recipe().stream()
-                .map(
-                    ingredient -> ingredientRepository.findById(ingredient.id())
-                        .orElseThrow(IllegalStateException::new)
-                ).collect(Collectors.toList());
+        //noinspection ResultOfMethodCallIgnored
+        updatedDish.recipe().stream()
+                .map(this::toIngredientEntiy)
+                .collect(Collectors.toList());
         DishEntity newDish = dishMapper.toEntity(updatedDish);
         dishRepository.save(newDish);
     }
@@ -86,5 +84,10 @@ public class DishServices {
         } else {
             dishRepository.deleteById(storedDish.id());
         }
+    }
+
+    private IngredientEntity toIngredientEntiy(Ingredient ingredient) throws IllegalStateException {
+        return ingredientRepository.findById(ingredient.id())
+                .orElseThrow(() -> new IllegalStateException(ingredient.name() + " does not exist"));
     }
 }
