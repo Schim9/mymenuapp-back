@@ -54,14 +54,4 @@ public class MenuItemDeserializer extends StdDeserializer<MenuItem> {
             return new Ingredient(id, itemName, sectionId, unit);
         }
     }
-
-    private MenuItem toMenuItem(JsonNode jsonNode) throws JsonProcessingException {
-        // Check the node is a dish or an ingredient
-        if (jsonNode.has("recipe")) {
-            return jsonObjectMapper.treeToValue(jsonNode, Dish.class);
-        } else {
-            return jsonObjectMapper.treeToValue(jsonNode, Ingredient.class);
-        }
-    }
-
 }
