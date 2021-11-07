@@ -60,7 +60,7 @@ public class MenuServices {
                 dinnerMeals
         );
         menuRepository.save(createdMenu);
-        return newMenu;
+        return menuMapper.toView(createdMenu);
     }
 
     public void updateMenu(Menu updatedMenu) throws IllegalStateException {

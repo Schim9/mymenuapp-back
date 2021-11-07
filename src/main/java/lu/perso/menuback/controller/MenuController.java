@@ -18,13 +18,13 @@ public class MenuController {
     MenuServices menuServices;
 
     @GetMapping("")
-    public ResponseEntity<List<Menu>> findAllDishes() {
+    public ResponseEntity<List<Menu>> findAllMenus() {
         List<Menu> allDishes = menuServices.getAllMenus();
         return new ResponseEntity<>(allDishes, HttpStatus.OK);
     }
 
     @PostMapping("")
-    public ResponseEntity<String> createDish(@RequestBody Menu menuParam) {
+    public ResponseEntity<String> createMenu(@RequestBody Menu menuParam) {
         try {
             Menu createdDish = menuServices.createMenu(menuParam);
             return new ResponseEntity<>(createdDish.name() + " has been created", HttpStatus.CREATED);
@@ -36,7 +36,7 @@ public class MenuController {
     }
 
     @PutMapping("")
-    public ResponseEntity<Long> updateDish(@RequestBody Menu menuParam) {
+    public ResponseEntity<Long> updateMenu(@RequestBody Menu menuParam) {
         try {
             menuServices.updateMenu(menuParam);
             return new ResponseEntity<>(menuParam.id(), HttpStatus.OK);
@@ -48,7 +48,7 @@ public class MenuController {
     }
 
     @DeleteMapping("")
-    public ResponseEntity<Long> deleteDish(@RequestBody Menu menuParam) {
+    public ResponseEntity<Long> deleteMenu(@RequestBody Menu menuParam) {
         try {
             menuServices.deleteMenu(menuParam);
             return new ResponseEntity<>(menuParam.id(), HttpStatus.OK);

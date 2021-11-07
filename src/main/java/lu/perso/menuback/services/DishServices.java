@@ -57,7 +57,7 @@ public class DishServices {
                 recipe
         );
         dishRepository.save(createdDish);
-        return newDish;
+        return dishMapper.toView(createdDish);
     }
 
     public void updateDish(Dish updatedDish) throws IllegalStateException {
