@@ -35,7 +35,7 @@ public class MenuItemDeserializer extends StdDeserializer<MenuItem> {
     public MenuItem deserialize(JsonParser jp, DeserializationContext ctxt)
       throws IOException {
         JsonNode node = jp.getCodec().readTree(jp);
-        long id = (node.get("id")).longValue();
+        long id = node.has("id") ? (node.get("id")).longValue() : 0L;
         String itemName = node.get("name").asText();
         if (node.has("recipe")) {
             // In case the JsonNode is a Dish
