@@ -73,9 +73,10 @@ public class IngredientServices {
         IngredientEntity storedIngredient = ingredientRepository.findById(ingredientToDelete.id())
                 .orElseThrow(() -> new IllegalStateException("This ingredient does not exist"));
         // Check if ingredient is not used in any dish
-        if (!dishRepository.findDishEntitiesByRecipeContaining(Stream.of(storedIngredient).toList()).isEmpty()) {
+        List<MenuItemEntity> elements = Stream.of((MenuItemEntity) storedIngredient).toList();
+        if (!dishRepository.findDishEntitiesByIngredientsContaining(Stream.of(storedIngredient).toList()).isEmpty()) {
             throw new IllegalStateException("This ingredient is used and can not be deleted");
-        } else if (!menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(Stream.of((MenuItemEntity) storedIngredient).toList()).isEmpty()) {
+        } else if (!menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(elements, elements).isEmpty()) {
             throw new IllegalStateException("This ingredient is planned and can not be deleted");
         } else {
             ingredientRepository.deleteById(ingredientToDelete.id());

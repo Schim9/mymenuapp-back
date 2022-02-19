@@ -11,5 +11,5 @@ public interface MenuRepository extends MongoRepository<MenuEntity, Long> {
 
     MenuEntity findByName(String name);
 
-    List<MenuEntity> findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(List<MenuItemEntity> dinnerMeals);
+    List<MenuEntity> findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(List<MenuItemEntity> lunchMeals, List<MenuItemEntity> dinnerMeals);
 }

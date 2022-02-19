@@ -66,12 +66,11 @@ public class DishServices {
             throw new IllegalStateException("This dish does not exist");
         }
         // In case one of them does not exist, an error is raised
-        //noinspection ResultOfMethodCallIgnored
-        updatedDish.recipe().stream()
+        //noinspection
+        List<IngredientEntity> ingredientEntities = updatedDish.recipe().stream()
                 .map(this::toIngredientEntiy)
                 .collect(Collectors.toList());
-        DishEntity newDish = dishMapper.toEntity(updatedDish);
-        dishRepository.save(newDish);
+        dishRepository.save(new DishEntity(updatedDish.id(), updatedDish.name(),  ingredientEntities));
     }
 
     public void deleteDish(Dish dishToDelete) throws IllegalStateException {
@@ -79,15 +78,16 @@ public class DishServices {
         DishEntity storedDish = dishRepository.findById(dishToDelete.id())
                 .orElseThrow(() -> new IllegalStateException("This dish does not exist"));
         // Check if dish is not used in any menu
-        if (!menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(Stream.of((MenuItemEntity) storedDish).toList()).isEmpty()) {
+        List<MenuItemEntity> elements = Stream.of((MenuItemEntity) storedDish).toList();
+        if (!menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(elements, elements).isEmpty()) {
             throw new IllegalStateException("This dish is planned and can not be deleted");
         } else {
             dishRepository.deleteById(storedDish.id());
         }
     }
 
-    private IngredientEntity toIngredientEntiy(Ingredient ingredient) throws IllegalStateException {
-        return ingredientRepository.findById(ingredient.id())
-                .orElseThrow(() -> new IllegalStateException(ingredient.name() + " does not exist"));
+    private IngredientEntity toIngredientEntiy(Long ingredientId) throws IllegalStateException {
+        return ingredientRepository.findById(ingredientId)
+                .orElseThrow(() -> new IllegalStateException(ingredientId + " does not exist"));
     }
 }

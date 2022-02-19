@@ -36,20 +36,18 @@ public class MenuItemDeserializer extends StdDeserializer<MenuItem> {
       throws IOException {
         JsonNode node = jp.getCodec().readTree(jp);
         long id = node.has("id") ? (node.get("id")).longValue() : 0L;
-        String itemName = node.get("name").asText();
+        String itemName = node.has("name") ? (node.get("name")).asText() : "";
         if (node.has("recipe")) {
             // In case the JsonNode is a Dish
+            List<Long> recipe = new ArrayList<>();
             ArrayNode jsonRecipe = (ArrayNode) node.get("recipe");
-            List<Ingredient> recipe = new ArrayList<>();
-            for (JsonNode element : jsonRecipe) {
-                Ingredient ingredient = jsonObjectMapper.treeToValue(element, Ingredient.class);
-                recipe.add(ingredient);
-            }
+            jsonRecipe.elements().forEachRemaining(jsonNode -> recipe.add(jsonNode.longValue()));
             return new Dish(id, itemName, recipe);
         } else {
             // In case the JsonNode is an ingredient
-            long sectionId = node.get("sectionId").longValue();
-            UNIT unit = UNIT.valueOf(node.get("unit").asText());
+            long sectionId = node.has("sectionId") ? (node.get("sectionId")).longValue() : 0L;
+            UNIT unit = node.has("unit") ? UNIT.valueOf(node.get("unit").asText()) : UNIT.PIECE;
+
             return new Ingredient(id, itemName, sectionId, unit);
         }
     }

@@ -11,5 +11,5 @@ public interface DishRepository extends MongoRepository<DishEntity, Long> {
 
     DishEntity findByName(String name);
 
-    List<DishEntity> findDishEntitiesByRecipeContaining(List<IngredientEntity> recipe);
+    List<DishEntity> findDishEntitiesByIngredientsContaining(List<IngredientEntity> ingredients);
 }
