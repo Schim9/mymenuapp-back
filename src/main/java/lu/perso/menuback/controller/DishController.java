@@ -2,6 +2,8 @@ package lu.perso.menuback.controller;
 
 import lu.perso.menuback.models.Dish;
 import lu.perso.menuback.services.DishServices;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,8 +18,11 @@ public class DishController {
     @Autowired
     DishServices dishServices;
 
+    Logger logger = LogManager.getLogger(getClass());
+
     @GetMapping("")
     public ResponseEntity<List<Dish>> findAllDishes() {
+        logger.info("call findAllDishes");
         List<Dish> allDishes = dishServices.getAllDishes();
         return new ResponseEntity<>(allDishes, HttpStatus.OK);
     }

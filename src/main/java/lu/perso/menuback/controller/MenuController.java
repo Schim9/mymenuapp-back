@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:3000")
@@ -19,8 +20,8 @@ public class MenuController {
 
     @GetMapping("")
     public ResponseEntity<List<Menu>> findAllMenus() {
-        List<Menu> allDishes = menuServices.getAllMenus();
-        return new ResponseEntity<>(allDishes, HttpStatus.OK);
+        List<Menu> allMenus = menuServices.getAllMenus(LocalDate.now());
+        return new ResponseEntity<>(allMenus, HttpStatus.OK);
     }
 
     @PostMapping("")
@@ -36,10 +37,10 @@ public class MenuController {
     }
 
     @PutMapping("")
-    public ResponseEntity<Long> updateMenu(@RequestBody Menu menuParam) {
+    public ResponseEntity<LocalDate> updateMenu(@RequestBody Menu menuParam) {
         try {
-            menuServices.updateMenu(menuParam);
-            return new ResponseEntity<>(menuParam.id(), HttpStatus.OK);
+            menuServices.handleMenuUpdate(menuParam);
+            return new ResponseEntity<>(menuParam.date(), HttpStatus.OK);
         } catch (IllegalStateException ise) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
@@ -48,10 +49,10 @@ public class MenuController {
     }
 
     @DeleteMapping("")
-    public ResponseEntity<Long> deleteMenu(@RequestBody Menu menuParam) {
+    public ResponseEntity<LocalDate> deleteMenu(@RequestBody Menu menuParam) {
         try {
             menuServices.deleteMenu(menuParam);
-            return new ResponseEntity<>(menuParam.id(), HttpStatus.OK);
+            return new ResponseEntity<>(menuParam.date(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -38,8 +38,8 @@ public class MenuMapper {
                 .collect(Collectors.toList());
 
         return new Menu(
-                entity.id(),
                 entity.name(),
+                entity.date(),
                 lunchMeals,
                 dinnerMeals
                 );
@@ -63,8 +63,8 @@ public class MenuMapper {
                 .collect(Collectors.toList());
 
         return new MenuEntity(
-                view.id(),
                 view.name(),
+                view.date(),
                 lunchMeals,
                 dinnerMeals
         );

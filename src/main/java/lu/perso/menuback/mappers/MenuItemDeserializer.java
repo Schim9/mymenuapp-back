@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class MenuItemDeserializer extends StdDeserializer<MenuItem> {
@@ -46,7 +47,11 @@ public class MenuItemDeserializer extends StdDeserializer<MenuItem> {
         } else {
             // In case the JsonNode is an ingredient
             long sectionId = node.has("sectionId") ? (node.get("sectionId")).longValue() : 0L;
-            UNIT unit = node.has("unit") ? UNIT.valueOf(node.get("unit").asText()) : UNIT.PIECE;
+            UNIT unit = Optional.ofNullable(node.get("unit"))
+                    // FIXME: We should not have a "null" value
+                    .filter(enumValue -> !enumValue.asText().equals("null"))
+                    .map(enumValue -> UNIT.valueOf(enumValue.asText()))
+                    .orElse(UNIT.PIECE);
 
             return new Ingredient(id, itemName, sectionId, unit);
         }

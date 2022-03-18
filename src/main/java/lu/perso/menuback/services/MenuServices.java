@@ -12,11 +12,16 @@ import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.repository.MenuRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.Objects;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,17 +39,49 @@ public class MenuServices {
     @Autowired
     MenuMapper menuMapper;
 
-    public List<Menu> getAllMenus() {
-        List<MenuEntity> menuList = menuRepository.findAll();
-        return menuList.stream()
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+
+    public List<Menu> getAllMenus(LocalDate selectedDate) {
+
+        LocalDate startDate = selectedDate.minus(7, ChronoUnit.DAYS);
+        LocalDate endDate = selectedDate.plus(7, ChronoUnit.DAYS);
+        // Get all menus for previous and coming days
+        List<MenuEntity> menuList = menuRepository.findAll(startDate, endDate);
+        // Init List to be mapped and sent
+        List<MenuEntity> result = new ArrayList<>();
+        LocalDate currentDate = startDate;
+        do {
+            LocalDate finalVariable = currentDate;
+            result.add(menuList.stream()
+                    // In case a relevant menu was found
+                    .filter(menu -> menu.date().isEqual(finalVariable))
+                    .findFirst()
+                    // or else, init with en empty menu
+                    .orElse(new MenuEntity(currentDate.getDayOfWeek().name().toUpperCase(Locale.ROOT), currentDate, List.of(), List.of())));
+            currentDate = currentDate.plus(1, ChronoUnit.DAYS);
+        } while (currentDate.isBefore(endDate));
+
+        return result.stream()
                 .map(element -> menuMapper.toView(element))
                 .collect(Collectors.toList());
     }
 
+    public Menu handleMenuUpdate(Menu newMenu) throws IllegalStateException {
+        // Check if menu already exists
+        if (menuRepository.findByDate(newMenu.date()).isPresent()) {
+            return this.updateMenu(newMenu);
+        } else {
+            return this.createMenu(newMenu);
+        }
+
+    }
+
     public Menu createMenu(Menu newMenu) throws IllegalStateException {
         // Check if menu already exists
-        if (!Objects.isNull(menuRepository.findByName(newMenu.name()))) {
-            throw new IllegalStateException(newMenu.name() + " does already exist");
+        if (menuRepository.findByDate(newMenu.date()).isPresent()) {
+            throw new IllegalStateException("A menu already exists for " + newMenu.date());
         }
         var lunchMeals = newMenu.lunchMeals().stream()
                 .map(this::toItemMenuEntity)
@@ -54,8 +91,8 @@ public class MenuServices {
                 .collect(Collectors.toList());
 
         MenuEntity createdMenu = new MenuEntity(
-                databaseServices.generateSequence(MenuEnum.SEQUENCE_TYPE.MENUS),
                 StringUtils.capitalize(newMenu.name()),
+                newMenu.date(),
                 lunchMeals,
                 dinnerMeals
         );
@@ -63,27 +100,43 @@ public class MenuServices {
         return menuMapper.toView(createdMenu);
     }
 
-    public void updateMenu(Menu updatedMenu) throws IllegalStateException {
+    public Menu updateMenu(Menu updatedMenu) throws IllegalStateException {
+        Optional<MenuEntity> byDate = menuRepository.findByDate(updatedMenu.date());
         // Check if menu does exist
-        if (menuRepository.findById(updatedMenu.id()).isEmpty()) {
+        if (byDate.isEmpty()) {
             throw new IllegalStateException("This menu does not exist");
         }
-        // In case one of them does not exist, an error is raised
-        //noinspection ResultOfMethodCallIgnored
-        Stream.concat(
-                        updatedMenu.lunchMeals().stream(),
-                        updatedMenu.dinnerMeals().stream())
-                .map(this::toItemMenuEntity)
-                .collect(Collectors.toList());
-        MenuEntity newMenu = menuMapper.toEntity(updatedMenu);
-        menuRepository.save(newMenu);
+        byDate.ifPresent(menu -> {
+            // In case one of them does not exist, an error is raised
+            //noinspection ResultOfMethodCallIgnored
+            Stream.concat(
+                            updatedMenu.lunchMeals().stream(),
+                            updatedMenu.dinnerMeals().stream())
+                    .map(this::toItemMenuEntity)
+                    .collect(Collectors.toList());
+            MenuEntity newMenu = menuMapper.toEntity(updatedMenu);
+
+            Query query = new Query();
+            query.addCriteria(Criteria.where("date").is(menu.date()));
+            List<MenuItemEntity> lunchMeals = updatedMenu.lunchMeals().stream()
+                    .map(this::toItemMenuEntity)
+                    .collect(Collectors.toList());
+            List<MenuItemEntity> dinnerMeals = updatedMenu.dinnerMeals().stream()
+                    .map(this::toItemMenuEntity)
+                    .collect(Collectors.toList());
+
+            Update update = new Update();
+            update.set("lunchMeals", lunchMeals);
+            update.set("dinnerMeals", dinnerMeals);
+            mongoTemplate.updateFirst(query, update, MenuEntity.class);
+        });
+        return updatedMenu;
     }
 
+    // TODO: Do not delete, juste clean
+    // Keep an empty records
     public void deleteMenu(Menu menuToDelete) throws IllegalStateException {
-        // Check if menuToDelete does exist
-        MenuEntity storedMenu = menuRepository.findById(menuToDelete.id())
-                .orElseThrow(() -> new IllegalStateException("This menu does not exist"));
-        menuRepository.deleteById(storedMenu.id());
+        throw new IllegalStateException("Not implemented");
     }
 
     private MenuItemEntity toItemMenuEntity(MenuItem menuItem) throws IllegalStateException {
