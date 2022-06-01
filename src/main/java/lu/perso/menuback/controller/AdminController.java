@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://menu-app.kaminski.lu"})
 public class AdminController {
 
     @SuppressWarnings("rawtypes")
