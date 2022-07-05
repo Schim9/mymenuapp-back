@@ -28,14 +28,14 @@ public class DishController {
     }
 
     @PostMapping("")
-    public ResponseEntity<String> createDish(@RequestBody Dish dishParam) {
+    public ResponseEntity<Dish> createDish(@RequestBody Dish dishParam) {
         try {
             Dish createdDish = dishServices.createDish(dishParam);
-            return new ResponseEntity<>(createdDish.name() + " has been created", HttpStatus.CREATED);
+            return new ResponseEntity<>(createdDish, HttpStatus.CREATED);
         } catch (IllegalStateException ise) {
-            return new ResponseEntity<>(ise.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }  catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
