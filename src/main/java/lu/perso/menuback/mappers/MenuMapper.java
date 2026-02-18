@@ -22,30 +22,31 @@ public class MenuMapper {
     IngredientMapper ingredientMapper;
 
     public Menu toView(MenuEntity entity) {
-        List<MenuItem> lunchMeals = entity.lunchMeals()
+        List<MenuItem> lunchMeals = entity.getLunchMeals()
                 .stream()
                 .map(meal -> switch (meal) {
                     case DishEntity dish -> dishMapper.toView(dish);
                     case IngredientEntity ingredient -> ingredientMapper.toView(ingredient);
+                    default -> throw new IllegalStateException("Unknown meal type");
                 })
                 .collect(Collectors.toList());
-        List<MenuItem> dinnerMeals = entity.dinnerMeals()
+        List<MenuItem> dinnerMeals = entity.getDinnerMeals()
                 .stream()
                 .map(meal -> switch (meal) {
                     case DishEntity dish -> dishMapper.toView(dish);
                     case IngredientEntity ingredient -> ingredientMapper.toView(ingredient);
+                    default -> throw new IllegalStateException("Unknown meal type");
                 })
                 .collect(Collectors.toList());
 
         return new Menu(
-                entity.name(),
-                entity.date(),
+                entity.getName(),
+                entity.getDate(),
                 lunchMeals,
                 dinnerMeals
                 );
     }
 
-    // NotImplemented yet
     public MenuEntity toEntity(Menu view) {
         List<MenuItemEntity> lunchMeals = view.lunchMeals()
                 .stream()
@@ -63,6 +64,7 @@ public class MenuMapper {
                 .collect(Collectors.toList());
 
         return new MenuEntity(
+                null,
                 view.name(),
                 view.date(),
                 lunchMeals,

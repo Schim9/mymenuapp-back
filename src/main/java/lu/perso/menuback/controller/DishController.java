@@ -4,21 +4,22 @@ import lu.perso.menuback.models.Dish;
 import lu.perso.menuback.services.DishServices;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = {"http://localhost:3000", "https://menu-app.kaminski.lu"})
 @RestController
 @RequestMapping("/dishes")
 public class DishController {
-    @Autowired
-    DishServices dishServices;
 
-    Logger logger = LogManager.getLogger(getClass());
+    private final DishServices dishServices;
+    private final Logger logger = LogManager.getLogger(getClass());
+
+    public DishController(DishServices dishServices) {
+        this.dishServices = dishServices;
+    }
 
     @GetMapping("")
     public ResponseEntity<List<Dish>> findAllDishes() {
@@ -29,41 +30,19 @@ public class DishController {
 
     @PostMapping("")
     public ResponseEntity<Dish> createDish(@RequestBody Dish dishParam) {
-        try {
-            Dish createdDish = dishServices.createDish(dishParam);
-            return new ResponseEntity<>(createdDish, HttpStatus.CREATED);
-        } catch (IllegalStateException ise) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }  catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        Dish createdDish = dishServices.createDish(dishParam);
+        return new ResponseEntity<>(createdDish, HttpStatus.CREATED);
     }
 
-    @PutMapping("")
-    public ResponseEntity<Long> updateDish(@RequestBody Dish dishParam) {
-        try {
-            dishServices.updateDish(dishParam);
-            return new ResponseEntity<>(dishParam.id(), HttpStatus.OK);
-        } catch (IllegalStateException ise) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @PutMapping("/{dishId}")
+    public ResponseEntity<Long> updateDish(@RequestBody Dish dishParam, @PathVariable final Long dishId) {
+        dishServices.updateDish(dishId, dishParam);
+        return new ResponseEntity<>(dishParam.id(), HttpStatus.OK);
     }
 
-    @DeleteMapping("")
-    public ResponseEntity<Long> deleteDish(@RequestBody Dish dishParam) {
-        try {
-            dishServices.deleteDish(dishParam);
-            return new ResponseEntity<>(dishParam.id(), HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @DeleteMapping("/{dishId}")
+    public ResponseEntity<Long> deleteDish(@PathVariable final Long dishId) {
+        dishServices.deleteDish(dishId);
+        return new ResponseEntity<>(dishId, HttpStatus.OK);
     }
 }
-
-
-
-
-
-

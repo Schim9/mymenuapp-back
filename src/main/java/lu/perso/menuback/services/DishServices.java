@@ -1,16 +1,13 @@
 package lu.perso.menuback.services;
 
-import lu.perso.menuback.constant.MenuEnum;
 import lu.perso.menuback.data.DishEntity;
 import lu.perso.menuback.data.IngredientEntity;
 import lu.perso.menuback.data.MenuItemEntity;
 import lu.perso.menuback.mappers.DishMapper;
 import lu.perso.menuback.models.Dish;
-import lu.perso.menuback.models.Ingredient;
 import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.repository.MenuRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -21,16 +18,19 @@ import java.util.stream.Stream;
 
 @Service
 public class DishServices {
-    @Autowired
-    DishMapper dishMapper;
-    @Autowired
-    MenuRepository menuRepository;
-    @Autowired
-    DishRepository dishRepository;
-    @Autowired
-    IngredientRepository ingredientRepository;
-    @Autowired
-    DatabaseServices databaseServices;
+
+    private final DishMapper dishMapper;
+    private final MenuRepository menuRepository;
+    private final DishRepository dishRepository;
+    private final IngredientRepository ingredientRepository;
+
+    public DishServices(DishMapper dishMapper, MenuRepository menuRepository,
+                        DishRepository dishRepository, IngredientRepository ingredientRepository) {
+        this.dishMapper = dishMapper;
+        this.menuRepository = menuRepository;
+        this.dishRepository = dishRepository;
+        this.ingredientRepository = ingredientRepository;
+    }
 
     public List<Dish> getAllDishes() {
         List<DishEntity> dishList = dishRepository.findAll();
@@ -46,47 +46,46 @@ public class DishServices {
         }
         // Get Ingredients from database
         // In case one of them does not exist, an error is raised
-        var recipe = newDish.recipe()
+        var ingredients = newDish.ingredients()
             .stream()
-            .map(this::toIngredientEntiy)
-            .collect(Collectors.toList());
+            .map(this::toIngredientEntity)
+            .toList();
 
         DishEntity createdDish = new DishEntity(
-                databaseServices.generateSequence(MenuEnum.SEQUENCE_TYPE.DISHES),
+                null,
                 StringUtils.capitalize(newDish.name()),
-                recipe
+                ingredients
         );
         dishRepository.save(createdDish);
         return dishMapper.toView(createdDish);
     }
 
-    public void updateDish(Dish updatedDish) throws IllegalStateException {
+    public void updateDish(Long dishId, Dish updatedDish) throws IllegalStateException {
         // Check if dish does exist
-        if (dishRepository.findById(updatedDish.id()).isEmpty()) {
+        if (dishRepository.findById(dishId).isEmpty()) {
             throw new IllegalStateException("This dish does not exist");
         }
         // In case one of them does not exist, an error is raised
-        //noinspection
-        List<IngredientEntity> ingredientEntities = updatedDish.recipe().stream()
-                .map(this::toIngredientEntiy)
+        List<IngredientEntity> ingredientEntities = updatedDish.ingredients().stream()
+                .map(this::toIngredientEntity)
                 .collect(Collectors.toList());
-        dishRepository.save(new DishEntity(updatedDish.id(), updatedDish.name(),  ingredientEntities));
+        dishRepository.save(new DishEntity(dishId, updatedDish.name(), ingredientEntities));
     }
 
-    public void deleteDish(Dish dishToDelete) throws IllegalStateException {
+    public void deleteDish(Long dishId) throws IllegalStateException {
         // Check if dish does exist
-        DishEntity storedDish = dishRepository.findById(dishToDelete.id())
+        DishEntity storedDish = dishRepository.findById(dishId)
                 .orElseThrow(() -> new IllegalStateException("This dish does not exist"));
         // Check if dish is not used in any menu
         List<MenuItemEntity> elements = Stream.of((MenuItemEntity) storedDish).toList();
-        if (!menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(elements, elements).isEmpty()) {
+        if (!menuRepository.findMenus(elements, elements).isEmpty()) {
             throw new IllegalStateException("This dish is planned and can not be deleted");
         } else {
-            dishRepository.deleteById(storedDish.id());
+            dishRepository.deleteById(storedDish.getId());
         }
     }
 
-    private IngredientEntity toIngredientEntiy(Long ingredientId) throws IllegalStateException {
+    private IngredientEntity toIngredientEntity(Long ingredientId) throws IllegalStateException {
         return ingredientRepository.findById(ingredientId)
                 .orElseThrow(() -> new IllegalStateException(ingredientId + " does not exist"));
     }

@@ -1,14 +1,30 @@
 package lu.perso.menuback.data;
 
 import lu.perso.menuback.constant.MenuEnum.UNIT;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
-@Document(collection = "ingredients")
-public record IngredientEntity (
-        @Id
-        Long id,
-        String name,
-        Long sectionId,
-        UNIT unit
-)  implements MenuItemEntity { }
+@Entity
+public class IngredientEntity extends MenuItemEntity {
+        @Column(name="sectionId")
+        Long sectionId;
+        @Column(name="unit")
+        @Enumerated(EnumType.STRING)
+        UNIT unit;
+        // Getters et setters
+        public Long getSectionId() { return sectionId; }
+        public void setSectionId(Long sectionId) { this.sectionId = sectionId; }
+        public UNIT getUnit() { return unit; }
+        public void setUnit(UNIT unit) { this.unit = unit; }
+
+        public IngredientEntity() {
+                super();
+        }
+
+        public IngredientEntity(Long id, String name, Long sectionId, UNIT unit) {
+                super();
+                this.setId(id);
+                this.setName(name);
+                this.setUnit(unit);
+                this.setSectionId(sectionId);
+        }
+}

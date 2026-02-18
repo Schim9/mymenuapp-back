@@ -14,21 +14,21 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface DishMapper {
 
-    @Mapping(source = "recipe", target = "ingredients",qualifiedByName = "CustomMapperToEntity")
+    @Mapping(source = "ingredients", target = "ingredients",qualifiedByName = "CustomMapperToEntity")
     DishEntity toEntity(Dish view);
 
-    @Mapping(source = "ingredients", target = "recipe",qualifiedByName = "CustomMapperToView")
+    @Mapping(source = "ingredients", target = "ingredients",qualifiedByName = "CustomMapperToView")
     Dish toView(DishEntity entity);
 
 
     @Named("CustomMapperToView")
-    static List<Long> fromEntityToView(List<IngredientEntity> recipe) {
-        return recipe.stream().map(IngredientEntity::id).collect(Collectors.toList());
+    static List<Long> fromEntityToView(List<IngredientEntity> ingredients) {
+        return ingredients.stream().map(IngredientEntity::getId).collect(Collectors.toList());
     }
 
     @Named("CustomMapperToEntity")
-    static List<IngredientEntity> fromViewToEntity(List<Long> recipe) {
-        return recipe.stream()
+    static List<IngredientEntity> fromViewToEntity(List<Long> ingredients) {
+        return ingredients.stream()
                 .map(ingredientId -> new IngredientEntity(ingredientId, "", 0L, MenuEnum.UNIT.PIECE))
                 .collect(Collectors.toList());
     }

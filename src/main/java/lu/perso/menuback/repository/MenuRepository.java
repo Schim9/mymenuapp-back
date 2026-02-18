@@ -2,19 +2,28 @@ package lu.perso.menuback.repository;
 
 import lu.perso.menuback.data.MenuEntity;
 import lu.perso.menuback.data.MenuItemEntity;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface MenuRepository extends MongoRepository<MenuEntity, Long> {
+public interface MenuRepository extends CrudRepository<MenuEntity, Long> {
 
-    @Query("{$and :[{date:  { $lte: ?1 }},{date:  { $gte: ?0 }}]}")
-    List<MenuEntity> findAll(LocalDate startDate, LocalDate endDate);
+    // Utilisation de JPQL avec @Query
+    @Query("SELECT m FROM MenuEntity m WHERE m.date BETWEEN :startDate AND :endDate")
+    List<MenuEntity> findAll(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     Optional<MenuEntity> findByDate(LocalDate date);
 
-    List<MenuEntity> findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(List<MenuItemEntity> lunchMeals, List<MenuItemEntity> dinnerMeals);
+    @Query("SELECT DISTINCT m FROM MenuEntity m " +
+            "LEFT JOIN m.lunchMeals lm " +
+            "LEFT JOIN m.dinnerMeals dm " +
+            "WHERE lm IN :lunchItems OR dm IN :dinnerItems")
+    List<MenuEntity> findMenus(
+            @Param("lunchItems") List<MenuItemEntity> lunchItems,
+            @Param("dinnerItems") List<MenuItemEntity> dinnerItems
+    );
 }

@@ -1,6 +1,5 @@
 package lu.perso.menuback.services;
 
-import lu.perso.menuback.constant.MenuEnum;
 import lu.perso.menuback.data.IngredientEntity;
 import lu.perso.menuback.data.MenuItemEntity;
 import lu.perso.menuback.mappers.IngredientMapper;
@@ -8,7 +7,6 @@ import lu.perso.menuback.models.Ingredient;
 import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.repository.MenuRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -19,16 +17,19 @@ import java.util.stream.Stream;
 
 @Service
 public class IngredientServices {
-    @Autowired
-    IngredientRepository ingredientRepository;
-    @Autowired
-    DishRepository dishRepository;
-    @Autowired
-    MenuRepository menuRepository;
-    @Autowired
-    DatabaseServices databaseServices;
-    @Autowired
-    IngredientMapper ingredientMapper;
+
+    private final IngredientRepository ingredientRepository;
+    private final DishRepository dishRepository;
+    private final MenuRepository menuRepository;
+    private final IngredientMapper ingredientMapper;
+
+    public IngredientServices(IngredientRepository ingredientRepository, DishRepository dishRepository,
+                              MenuRepository menuRepository, IngredientMapper ingredientMapper) {
+        this.ingredientRepository = ingredientRepository;
+        this.dishRepository = dishRepository;
+        this.menuRepository = menuRepository;
+        this.ingredientMapper = ingredientMapper;
+    }
 
     public List<Ingredient> getAllIngredients() {
         List<IngredientEntity> ingredientList = ingredientRepository.findAll();
@@ -44,7 +45,7 @@ public class IngredientServices {
             throw new IllegalStateException("The ingredient does already  exist");
         }
         IngredientEntity newIngredient = new IngredientEntity(
-                databaseServices.generateSequence(MenuEnum.SEQUENCE_TYPE.INGREDIENTS),
+                null,
                 StringUtils.capitalize(ingredientModel.name()),
                 ingredientModel.sectionId(),
                 ingredientModel.unit()
@@ -53,14 +54,14 @@ public class IngredientServices {
         return ingredientMapper.toView(savedObject);
     }
 
-    public void updateIngredient(Ingredient updatedIngredient) throws IllegalStateException {
+    public void updateIngredient(Long ingredientId, Ingredient updatedIngredient) throws IllegalStateException {
         // Check if ingredient does exist
-        if (ingredientRepository.findById(updatedIngredient.id()).isEmpty()) {
+        if (ingredientRepository.findById(ingredientId).isEmpty()) {
             throw new IllegalStateException("This ingredient does not exist");
         }
 
         IngredientEntity newIngredient = new IngredientEntity(
-                updatedIngredient.id(),
+                ingredientId,
                 StringUtils.capitalize(updatedIngredient.name()),
                 updatedIngredient.sectionId(),
                 updatedIngredient.unit()
@@ -68,18 +69,18 @@ public class IngredientServices {
         ingredientRepository.save(newIngredient);
     }
 
-    public void deleteIngredient(Ingredient ingredientToDelete) throws IllegalStateException {
+    public void deleteIngredient(Long ingredientId) throws IllegalStateException {
         // Check if ingredient does exist
-        IngredientEntity storedIngredient = ingredientRepository.findById(ingredientToDelete.id())
+        IngredientEntity storedIngredient = ingredientRepository.findById(ingredientId)
                 .orElseThrow(() -> new IllegalStateException("This ingredient does not exist"));
         // Check if ingredient is not used in any dish
         List<MenuItemEntity> elements = Stream.of((MenuItemEntity) storedIngredient).toList();
         if (!dishRepository.findDishEntitiesByIngredientsContaining(Stream.of(storedIngredient).toList()).isEmpty()) {
             throw new IllegalStateException("This ingredient is used and can not be deleted");
-        } else if (!menuRepository.findMenuEntitiesByLunchMealsContainingOrDinnerMealsContaining(elements, elements).isEmpty()) {
+        } else if (!menuRepository.findMenus(elements, elements).isEmpty()) {
             throw new IllegalStateException("This ingredient is planned and can not be deleted");
         } else {
-            ingredientRepository.deleteById(ingredientToDelete.id());
+            ingredientRepository.deleteById(ingredientId);
         }
     }
 }

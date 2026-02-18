@@ -1,6 +1,5 @@
 package lu.perso.menuback.services;
 
-import lu.perso.menuback.constant.MenuEnum;
 import lu.perso.menuback.data.MenuEntity;
 import lu.perso.menuback.data.MenuItemEntity;
 import lu.perso.menuback.mappers.MenuMapper;
@@ -11,11 +10,6 @@ import lu.perso.menuback.models.MenuItem;
 import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.repository.MenuRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -23,25 +17,22 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class MenuServices {
 
-    @Autowired
-    DatabaseServices databaseServices;
-    @Autowired
-    IngredientRepository ingredientRepository;
-    @Autowired
-    DishRepository dishRepository;
-    @Autowired
-    MenuRepository menuRepository;
-    @Autowired
-    MenuMapper menuMapper;
+    private final IngredientRepository ingredientRepository;
+    private final DishRepository dishRepository;
+    private final MenuRepository menuRepository;
+    private final MenuMapper menuMapper;
 
-    @Autowired
-    private MongoTemplate mongoTemplate;
-
+    public MenuServices(IngredientRepository ingredientRepository, DishRepository dishRepository,
+                        MenuRepository menuRepository, MenuMapper menuMapper) {
+        this.ingredientRepository = ingredientRepository;
+        this.dishRepository = dishRepository;
+        this.menuRepository = menuRepository;
+        this.menuMapper = menuMapper;
+    }
 
     public List<Menu> getAllMenus(LocalDate selectedDate) {
 
@@ -56,10 +47,10 @@ public class MenuServices {
             LocalDate finalVariable = currentDate;
             result.add(menuList.stream()
                     // In case a relevant menu was found
-                    .filter(menu -> menu.date().isEqual(finalVariable))
+                    .filter(menu -> menu.getDate().isEqual(finalVariable))
                     .findFirst()
                     // or else, init with en empty menu
-                    .orElse(new MenuEntity(currentDate.getDayOfWeek().name().toUpperCase(Locale.ROOT), currentDate, List.of(), List.of())));
+                    .orElse(new MenuEntity(null, currentDate.getDayOfWeek().name().toUpperCase(Locale.ROOT), currentDate, List.of(), List.of())));
             currentDate = currentDate.plus(1, ChronoUnit.DAYS);
         } while (currentDate.isBefore(endDate));
 
@@ -91,6 +82,7 @@ public class MenuServices {
                 .collect(Collectors.toList());
 
         MenuEntity createdMenu = new MenuEntity(
+                null,
                 StringUtils.capitalize(newMenu.name()),
                 newMenu.date(),
                 lunchMeals,
@@ -101,42 +93,29 @@ public class MenuServices {
     }
 
     public Menu updateMenu(Menu updatedMenu) throws IllegalStateException {
-        Optional<MenuEntity> byDate = menuRepository.findByDate(updatedMenu.date());
-        // Check if menu does exist
-        if (byDate.isEmpty()) {
-            throw new IllegalStateException("This menu does not exist");
-        }
-        byDate.ifPresent(menu -> {
-            // In case one of them does not exist, an error is raised
-            //noinspection ResultOfMethodCallIgnored
-            Stream.concat(
-                            updatedMenu.lunchMeals().stream(),
-                            updatedMenu.dinnerMeals().stream())
-                    .map(this::toItemMenuEntity)
-                    .collect(Collectors.toList());
-            MenuEntity newMenu = menuMapper.toEntity(updatedMenu);
+        MenuEntity existingMenu = menuRepository.findByDate(updatedMenu.date())
+                .orElseThrow(() -> new IllegalStateException("This menu does not exist"));
 
-            Query query = new Query();
-            query.addCriteria(Criteria.where("date").is(menu.date()));
-            List<MenuItemEntity> lunchMeals = updatedMenu.lunchMeals().stream()
-                    .map(this::toItemMenuEntity)
-                    .collect(Collectors.toList());
-            List<MenuItemEntity> dinnerMeals = updatedMenu.dinnerMeals().stream()
-                    .map(this::toItemMenuEntity)
-                    .collect(Collectors.toList());
+        List<MenuItemEntity> lunchMeals = updatedMenu.lunchMeals().stream()
+                .map(this::toItemMenuEntity)
+                .collect(Collectors.toList());
+        List<MenuItemEntity> dinnerMeals = updatedMenu.dinnerMeals().stream()
+                .map(this::toItemMenuEntity)
+                .collect(Collectors.toList());
 
-            Update update = new Update();
-            update.set("lunchMeals", lunchMeals);
-            update.set("dinnerMeals", dinnerMeals);
-            mongoTemplate.updateFirst(query, update, MenuEntity.class);
-        });
-        return updatedMenu;
+        existingMenu.setName(StringUtils.capitalize(updatedMenu.name()));
+        existingMenu.setLunchMeals(lunchMeals);
+        existingMenu.setDinnerMeals(dinnerMeals);
+        menuRepository.save(existingMenu);
+        return menuMapper.toView(existingMenu);
     }
 
-    // TODO: Do not delete, juste clean
-    // Keep an empty records
     public void deleteMenu(Menu menuToDelete) throws IllegalStateException {
-        throw new IllegalStateException("Not implemented");
+        MenuEntity existingMenu = menuRepository.findByDate(menuToDelete.date())
+                .orElseThrow(() -> new IllegalStateException("This menu does not exist"));
+        existingMenu.setLunchMeals(new ArrayList<>());
+        existingMenu.setDinnerMeals(new ArrayList<>());
+        menuRepository.save(existingMenu);
     }
 
     private MenuItemEntity toItemMenuEntity(MenuItem menuItem) throws IllegalStateException {

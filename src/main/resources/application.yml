@@ -1,12 +1,13 @@
-#mongodb
 spring:
-  data:
-    mongodb:
-      host: 127.0.0.1
-      port: 27017
-      database: mydatabase
+  datasource:
+    url: jdbc:mysql://localhost:3306/menu-app?serverTimezone=UTC
+    username: root
+    password:
 
-#server
+  jpa:
+    hibernate:
+      ddl-auto: update
+
 server:
   servlet:
     context-path: /api
