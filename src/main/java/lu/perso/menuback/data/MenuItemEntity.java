@@ -3,7 +3,8 @@ package lu.perso.menuback.data;
 import jakarta.persistence.*;
 
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE) // ou JOINED, ou SINGLE_TABLE
+@Table(name = "menu_item")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class MenuItemEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

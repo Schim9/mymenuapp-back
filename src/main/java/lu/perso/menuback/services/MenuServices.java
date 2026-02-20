@@ -11,6 +11,7 @@ import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.repository.MenuRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
@@ -34,6 +35,7 @@ public class MenuServices {
         this.menuMapper = menuMapper;
     }
 
+    @Transactional(readOnly = true)
     public List<Menu> getAllMenus(LocalDate selectedDate) {
 
         LocalDate startDate = selectedDate.minus(7, ChronoUnit.DAYS);
@@ -59,6 +61,7 @@ public class MenuServices {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public Menu handleMenuUpdate(Menu newMenu) throws IllegalStateException {
         // Check if menu already exists
         if (menuRepository.findByDate(newMenu.date()).isPresent()) {
@@ -69,6 +72,7 @@ public class MenuServices {
 
     }
 
+    @Transactional
     public Menu createMenu(Menu newMenu) throws IllegalStateException {
         // Check if menu already exists
         if (menuRepository.findByDate(newMenu.date()).isPresent()) {
@@ -92,6 +96,7 @@ public class MenuServices {
         return menuMapper.toView(createdMenu);
     }
 
+    @Transactional
     public Menu updateMenu(Menu updatedMenu) throws IllegalStateException {
         MenuEntity existingMenu = menuRepository.findByDate(updatedMenu.date())
                 .orElseThrow(() -> new IllegalStateException("This menu does not exist"));

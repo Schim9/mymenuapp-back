@@ -9,6 +9,7 @@ import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.repository.MenuRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class DishServices {
         this.ingredientRepository = ingredientRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<Dish> getAllDishes() {
         List<DishEntity> dishList = dishRepository.findAll();
         return dishList.stream()
@@ -39,6 +41,7 @@ public class DishServices {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public Dish createDish(Dish newDish) throws IllegalStateException {
         // Check if dish already exists
         if (!Objects.isNull(dishRepository.findByName(newDish.name()))) {
@@ -60,6 +63,7 @@ public class DishServices {
         return dishMapper.toView(createdDish);
     }
 
+    @Transactional
     public void updateDish(Long dishId, Dish updatedDish) throws IllegalStateException {
         // Check if dish does exist
         if (dishRepository.findById(dishId).isEmpty()) {
