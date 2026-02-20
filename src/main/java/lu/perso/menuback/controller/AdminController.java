@@ -20,4 +20,9 @@ public class AdminController {
         );
         return new ResponseEntity<>(mapResponse, HttpStatus.OK);
     }
+
+    @GetMapping("/authenticate")
+    public ResponseEntity<Map<String, String>> authenticate() {
+        return ResponseEntity.ok(Map.of("status", "authorized"));
+    }
 }
