@@ -46,8 +46,9 @@ public class MenuItemDeserializer extends StdDeserializer<MenuItem> {
                     .filter(enumValue -> !enumValue.isNull() && !enumValue.asText().isEmpty() && !enumValue.asText().equals("null"))
                     .map(enumValue -> UNIT.valueOf(enumValue.asText()))
                     .orElse(UNIT.PIECE);
+            Boolean isDish = node.has("isDish") && !node.get("isDish").isNull() ? node.get("isDish").booleanValue() : null;
 
-            return new Ingredient(id, itemName, sectionId, unit);
+            return new Ingredient(id, itemName, sectionId, unit, isDish);
         }
     }
 }

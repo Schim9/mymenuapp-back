@@ -48,7 +48,8 @@ public class IngredientServices {
                 null,
                 StringUtils.capitalize(ingredientModel.name()),
                 ingredientModel.sectionId(),
-                ingredientModel.unit()
+                ingredientModel.unit(),
+                ingredientModel.isDish()
         );
         IngredientEntity savedObject = ingredientRepository.save(newIngredient);
         return ingredientMapper.toView(savedObject);
@@ -64,7 +65,8 @@ public class IngredientServices {
                 ingredientId,
                 StringUtils.capitalize(updatedIngredient.name()),
                 updatedIngredient.sectionId(),
-                updatedIngredient.unit()
+                updatedIngredient.unit(),
+                updatedIngredient.isDish()
         );
         ingredientRepository.save(newIngredient);
     }

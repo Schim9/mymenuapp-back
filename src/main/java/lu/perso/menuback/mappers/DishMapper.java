@@ -29,7 +29,7 @@ public interface DishMapper {
     @Named("CustomMapperToEntity")
     static List<IngredientEntity> fromViewToEntity(List<Long> ingredients) {
         return ingredients.stream()
-                .map(ingredientId -> new IngredientEntity(ingredientId, "", 0L, MenuEnum.UNIT.PIECE))
+                .map(ingredientId -> new IngredientEntity(ingredientId, "", 0L, MenuEnum.UNIT.PIECE, null))
                 .collect(Collectors.toList());
     }
 }
