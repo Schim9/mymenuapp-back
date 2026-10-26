@@ -9,14 +9,14 @@ import lu.perso.menuback.constant.MenuEnum.UNIT;
 import lu.perso.menuback.models.Dish;
 import lu.perso.menuback.models.Ingredient;
 import lu.perso.menuback.models.MenuItem;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+@Component
 public class MenuItemDeserializer extends StdDeserializer<MenuItem> {
 
     public MenuItemDeserializer() {

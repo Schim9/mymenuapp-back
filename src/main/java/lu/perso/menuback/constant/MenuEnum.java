@@ -9,11 +9,4 @@ public class MenuEnum {
         LITER,
         CAN
     }
-
-    public enum SEQUENCE_TYPE {
-        INGREDIENTS,
-        DISHES,
-        MENUS
-    }
-
 }

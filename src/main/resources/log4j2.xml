@@ -29,7 +29,7 @@
 
 
     <Loggers>
-        <Logger name="lu.perso.menuback" level="debug" additivity="false">
+        <Logger name="lu.perso.menuback" level="info" additivity="false">
             <AppenderRef ref="FileAppender" />
             <AppenderRef ref="ConsoleAppender"/>
         </Logger>

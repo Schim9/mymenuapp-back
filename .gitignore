@@ -35,3 +35,6 @@ build/
 ### Logs ###
 *.log
 logs/
+
+### Config locale (valeurs sensibles) ###
+application-local.yml

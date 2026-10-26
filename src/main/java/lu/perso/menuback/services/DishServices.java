@@ -13,8 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -37,15 +35,15 @@ public class DishServices {
     public List<Dish> getAllDishes() {
         List<DishEntity> dishList = dishRepository.findAll();
         return dishList.stream()
-                .map(element -> dishMapper.toView(element))
-                .collect(Collectors.toList());
+                .map(dishMapper::toView)
+                .toList();
     }
 
     @Transactional
     public Dish createDish(Dish newDish) throws IllegalStateException {
         // Check if dish already exists
-        if (!Objects.isNull(dishRepository.findByName(newDish.name()))) {
-           throw new IllegalStateException(newDish.name() + " does already exist");
+        if (dishRepository.findByName(newDish.name()).isPresent()) {
+            throw new IllegalStateException(newDish.name() + " does already exist");
         }
         // Get Ingredients from database
         // In case one of them does not exist, an error is raised
@@ -72,10 +70,11 @@ public class DishServices {
         // In case one of them does not exist, an error is raised
         List<IngredientEntity> ingredientEntities = updatedDish.ingredients().stream()
                 .map(this::toIngredientEntity)
-                .collect(Collectors.toList());
+                .toList();
         dishRepository.save(new DishEntity(dishId, updatedDish.name(), ingredientEntities));
     }
 
+    @Transactional
     public void deleteDish(Long dishId) throws IllegalStateException {
         // Check if dish does exist
         DishEntity storedDish = dishRepository.findById(dishId)

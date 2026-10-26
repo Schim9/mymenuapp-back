@@ -15,9 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 @Service
 public class MenuServices {
@@ -38,8 +38,8 @@ public class MenuServices {
     @Transactional(readOnly = true)
     public List<Menu> getAllMenus(LocalDate selectedDate) {
 
-        LocalDate startDate = selectedDate.minus(7, ChronoUnit.DAYS);
-        LocalDate endDate = selectedDate.plus(7, ChronoUnit.DAYS);
+        LocalDate startDate = selectedDate.minusDays(7);
+        LocalDate endDate = selectedDate.plusDays(7);
         // Get all menus for previous and coming days
         List<MenuEntity> menuList = menuRepository.findAll(startDate, endDate);
         // Init List to be mapped and sent
@@ -53,12 +53,12 @@ public class MenuServices {
                     .findFirst()
                     // or else, init with en empty menu
                     .orElse(new MenuEntity(null, currentDate.getDayOfWeek().name().toUpperCase(Locale.ROOT), currentDate, List.of(), List.of())));
-            currentDate = currentDate.plus(1, ChronoUnit.DAYS);
+            currentDate = currentDate.plusDays(1);
         } while (currentDate.isBefore(endDate));
 
         return result.stream()
-                .map(element -> menuMapper.toView(element))
-                .collect(Collectors.toList());
+                .map(menuMapper::toView)
+                .toList();
     }
 
     @Transactional
@@ -80,10 +80,10 @@ public class MenuServices {
         }
         var lunchMeals = newMenu.lunchMeals().stream()
                 .map(this::toItemMenuEntity)
-                .collect(Collectors.toList());
+                .toList();
         var dinnerMeals = newMenu.dinnerMeals().stream()
                 .map(this::toItemMenuEntity)
-                .collect(Collectors.toList());
+                .toList();
 
         MenuEntity createdMenu = new MenuEntity(
                 null,
@@ -103,10 +103,10 @@ public class MenuServices {
 
         List<MenuItemEntity> lunchMeals = updatedMenu.lunchMeals().stream()
                 .map(this::toItemMenuEntity)
-                .collect(Collectors.toList());
+                .toList();
         List<MenuItemEntity> dinnerMeals = updatedMenu.dinnerMeals().stream()
                 .map(this::toItemMenuEntity)
-                .collect(Collectors.toList());
+                .toList();
 
         existingMenu.setName(StringUtils.capitalize(updatedMenu.name()));
         existingMenu.setLunchMeals(lunchMeals);
@@ -115,12 +115,11 @@ public class MenuServices {
         return menuMapper.toView(existingMenu);
     }
 
-    public void deleteMenu(Menu menuToDelete) throws IllegalStateException {
-        MenuEntity existingMenu = menuRepository.findByDate(menuToDelete.date())
+    @Transactional
+    public void deleteMenu(LocalDate date) throws IllegalStateException {
+        MenuEntity existingMenu = menuRepository.findByDate(date)
                 .orElseThrow(() -> new IllegalStateException("This menu does not exist"));
-        existingMenu.setLunchMeals(new ArrayList<>());
-        existingMenu.setDinnerMeals(new ArrayList<>());
-        menuRepository.save(existingMenu);
+        menuRepository.delete(existingMenu);
     }
 
     private MenuItemEntity toItemMenuEntity(MenuItem menuItem) throws IllegalStateException {

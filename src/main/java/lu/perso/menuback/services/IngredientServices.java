@@ -8,11 +8,10 @@ import lu.perso.menuback.repository.DishRepository;
 import lu.perso.menuback.repository.IngredientRepository;
 import lu.perso.menuback.repository.MenuRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -31,18 +30,20 @@ public class IngredientServices {
         this.ingredientMapper = ingredientMapper;
     }
 
+    @Transactional(readOnly = true)
     public List<Ingredient> getAllIngredients() {
         List<IngredientEntity> ingredientList = ingredientRepository.findAll();
         return ingredientList.stream()
-                .map(element -> ingredientMapper.toView(element))
-                .collect(Collectors.toList());
+                .map(ingredientMapper::toView)
+                .toList();
     }
 
+    @Transactional
     public Ingredient createIngredient(Ingredient ingredientModel) throws IllegalStateException {
 
         // Check if ingredient already exists
-        if (!Objects.isNull(ingredientRepository.findByName(ingredientModel.name()))) {
-            throw new IllegalStateException("The ingredient does already  exist");
+        if (ingredientRepository.findByName(ingredientModel.name()).isPresent()) {
+            throw new IllegalStateException("The ingredient does already exist");
         }
         IngredientEntity newIngredient = new IngredientEntity(
                 null,
@@ -55,6 +56,7 @@ public class IngredientServices {
         return ingredientMapper.toView(savedObject);
     }
 
+    @Transactional
     public void updateIngredient(Long ingredientId, Ingredient updatedIngredient) throws IllegalStateException {
         // Check if ingredient does exist
         if (ingredientRepository.findById(ingredientId).isEmpty()) {
@@ -71,6 +73,7 @@ public class IngredientServices {
         ingredientRepository.save(newIngredient);
     }
 
+    @Transactional
     public void deleteIngredient(Long ingredientId) throws IllegalStateException {
         // Check if ingredient does exist
         IngredientEntity storedIngredient = ingredientRepository.findById(ingredientId)

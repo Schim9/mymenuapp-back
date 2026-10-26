@@ -2,7 +2,7 @@ package lu.perso.menuback.repository;
 
 import lu.perso.menuback.data.MenuEntity;
 import lu.perso.menuback.data.MenuItemEntity;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface MenuRepository extends CrudRepository<MenuEntity, Long> {
+public interface MenuRepository extends JpaRepository<MenuEntity, Long> {
 
     // Utilisation de JPQL avec @Query
     @Query("SELECT m FROM MenuEntity m WHERE m.date BETWEEN :startDate AND :endDate")
